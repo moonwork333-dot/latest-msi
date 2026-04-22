@@ -1,44 +1,54 @@
 import * as Service from 'node-windows';
 import * as path from 'path';
 
+// Get config path from environment or default
+const installPath = process.env.AGENT_INSTALL_PATH || 'C:\\Program Files\\RemoteAgent';
+const configPath = path.join(installPath, 'config', 'agent-config.json');
+
+// Create service
 const svc = new Service.Service({
   name: 'RemoteAgent',
-  description: 'Remote Agent Service for RMM',
+  description: 'Remote Agent Service',
   script: path.join(__dirname, 'service-runner.js'),
-  nodeArgs: ['--harmony'],
   env: [
     {
-      name: 'AGENT_SERVER_URL',
-      value: process.env.AGENT_SERVER_URL || 'ws://localhost:3001/hub',
+      name: 'AGENT_CONFIG_PATH',
+      value: configPath,
     },
     {
-      name: 'AGENT_AUTH_TOKEN',
-      value: process.env.AGENT_AUTH_TOKEN || 'test-token',
+      name: 'NODE_ENV',
+      value: 'production',
     },
   ],
+  execPath: process.execPath,
+  maxRetries: 3,
 });
 
-// Listen for the "install" event, which fires if the installation was successful
+// Listen for the "install" event
 svc.on('install', () => {
-  console.log('Service installed successfully');
+  console.log('Service installed');
   svc.start();
 });
 
+// Listen for the "start" event
 svc.on('start', () => {
   console.log('Service started');
 });
 
-svc.on('stop', () => {
-  console.log('Service stopped');
-});
-
-svc.on('uninstall', () => {
-  console.log('Service uninstalled');
-});
-
-svc.on('error', (error) => {
+// Listen for the "error" event
+svc.on('error', (error: Error) => {
   console.error('Service error:', error);
 });
 
-// Install the script as a windows service
-svc.install();
+// Check if it's an install request
+if (process.argv[2] === 'install') {
+  svc.install();
+} else if (process.argv[2] === 'uninstall') {
+  svc.uninstall();
+} else if (process.argv[2] === 'start') {
+  svc.start();
+} else if (process.argv[2] === 'stop') {
+  svc.stop();
+} else {
+  console.log('Usage: node windows-service.ts [install|uninstall|start|stop]');
+}
