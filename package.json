@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:agent": "tsc -p tsconfig.agent.json",
+    "build:agent:watch": "tsc -p tsconfig.agent.json --watch",
+    "start": "next start",
+    "lint": "eslint ."
+  }
+}
