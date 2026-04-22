@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as path from 'path';
 import { spawn } from 'child_process';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const { installPath } = await request.json();
@@ -11,6 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // On Windows, run the service registration command
+    // This uses node-windows to register and create the service
     const serviceFile = path.join(installPath, 'bin', 'windows-service.js');
 
     return new Promise((resolve, reject) => {
