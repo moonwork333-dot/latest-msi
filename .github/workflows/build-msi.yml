@@ -1,0 +1,83 @@
+name: Build Remote Agent MSI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-msi:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build Next.js app
+        run: pnpm run build
+        env:
+          AGENT_SERVER_URL: ${{ secrets.AGENT_SERVER_URL }}
+          AGENT_AUTH_TOKEN: ${{ secrets.AGENT_AUTH_TOKEN }}
+      
+      - name: Compile TypeScript agent
+        run: pnpm run build:agent
+      
+      - name: Install WiX Toolset
+        run: choco install wixtoolset -y
+      
+      - name: Prepare installer files
+        run: |
+          mkdir -p installer\bin
+          Copy-Item dist -Destination installer\ -Recurse -Force
+          Copy-Item agent\* installer\bin\ -Exclude *.ts -Force
+      
+      - name: Build MSI
+        working-directory: ./installer
+        run: |
+          candle.exe -o obj\ RemoteAgent.wxs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          light.exe -out RemoteAgent.msi obj\RemoteAgent.wixobj
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      
+      - name: Upload MSI as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RemoteAgent-MSI
+          path: installer/RemoteAgent.msi
+          retention-days: 30
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: installer/RemoteAgent.msi
+          body: |
+            # Remote Agent MSI Installer
+            
+            ## Features
+            - Screen capture using Windows APIs
+            - Remote keyboard and mouse control
+            - System and process monitoring
+            - Auto-starts on Windows boot
+            - Uninstall from Control Panel
+            
+            ## Installation
+            1. Run RemoteAgent.msi as Administrator
+            2. Follow the installer wizard
+            3. Agent will automatically start and connect to your RMM hub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
