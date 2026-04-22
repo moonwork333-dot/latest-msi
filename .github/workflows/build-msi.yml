@@ -48,7 +48,7 @@ jobs:
       - name: Build MSI
         working-directory: ./installer
         run: |
-          candle.exe -d SourceDir=. -o obj\ RemoteAgent.wxs
+          candle.exe -dSourceDir=. -o obj\ RemoteAgent.wxs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           light.exe -out RemoteAgent.msi obj\RemoteAgent.wixobj
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
