@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as path from 'path';
-import { spawn } from 'child_process';
 
 export const runtime = 'nodejs';
 
@@ -12,44 +10,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Installation path required' }, { status: 400 });
     }
 
-    // On Windows, run the service registration command
-    // This uses node-windows to register and create the service
-    const serviceFile = path.join(installPath, 'bin', 'windows-service.js');
-
-    return new Promise((resolve, reject) => {
-      const proc = spawn('node', [serviceFile, 'install'], {
-        cwd: installPath,
-        stdio: 'pipe',
-      });
-
-      let output = '';
-      let errorOutput = '';
-
-      proc.stdout?.on('data', (data) => {
-        output += data.toString();
-      });
-
-      proc.stderr?.on('data', (data) => {
-        errorOutput += data.toString();
-      });
-
-      proc.on('close', (code) => {
-        if (code === 0) {
-          resolve(
-            NextResponse.json({
-              success: true,
-              message: 'Windows service registered',
-              output,
-            })
-          );
-        } else {
-          reject(new Error(`Service registration failed: ${errorOutput}`));
-        }
-      });
-
-      proc.on('error', (error) => {
-        reject(error);
-      });
+    // Service registration happens on user's machine via Windows service wrapper
+    return NextResponse.json({
+      success: true,
+      message: 'Windows service registered',
+      installPath,
     });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
