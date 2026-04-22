@@ -49,9 +49,9 @@ jobs:
         working-directory: ./installer
         run: |
           New-Item -ItemType Directory -Force -Path obj
-          candle.exe -dSourceDir=. -out obj\RemoteAgent.wixobj RemoteAgent.wxs
+          candle.exe -dSourceDir=. -out "obj\" RemoteAgent.wxs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          light.exe -out RemoteAgent.msi obj\RemoteAgent.wixobj
+          light.exe -out RemoteAgent.msi "obj\RemoteAgent.wixobj"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       
       - name: Upload MSI as artifact
