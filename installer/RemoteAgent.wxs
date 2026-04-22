@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define ProductName = "Remote Agent" ?>
+  <?define ProductVersion = "1.0.0.0" ?>
+  <?define ProductManufacturer = "RMM Hub" ?>
+  <?define UpgradeCode = "12345678-1234-1234-1234-123456789012" ?>
+
+  <Product Id="*"
+           Name="$(var.ProductName)"
+           Language="1033"
+           Version="$(var.ProductVersion)"
+           Manufacturer="$(var.ProductManufacturer)"
+           UpgradeCode="$(var.UpgradeCode)">
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="$(var.ProductName) Installer" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <MediaSource Id="1" Cabinet="RemoteAgent.cab" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="RemoteAgent" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Remote Agent" />
+      </Directory>
+    </Directory>
+
+    <Feature Id="ProductFeature" Title="Remote Agent" Level="1">
+      <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="ConfigFile" />
+    </Feature>
+
+    <Component Id="MainExecutable" Directory="INSTALLFOLDER">
+      <File Id="AgentService" Name="windows-service.js" Source="$(var.SourceDir)\agent\windows-service.js" />
+      <File Id="AgentRunner" Name="service-runner.js" Source="$(var.SourceDir)\agent\service-runner.js" />
+      <File Id="RemoteAgent" Name="remote-agent.js" Source="$(var.SourceDir)\agent\remote-agent.js" />
+    </Component>
+
+    <Component Id="ConfigFile" Directory="INSTALLFOLDER">
+      <File Id="ConfigJson" Name="config.json" Source="$(var.SourceDir)\config.json" />
+    </Component>
+
+    <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.SourceDir)\LICENSE.rtf" />
+  </Product>
+</Wix>
