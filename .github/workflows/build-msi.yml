@@ -41,14 +41,15 @@ jobs:
       
       - name: Prepare installer files
         run: |
-          mkdir -p installer\bin
+          New-Item -ItemType Directory -Force -Path installer\bin
           Copy-Item dist -Destination installer\ -Recurse -Force
           Copy-Item agent\* installer\bin\ -Exclude *.ts -Force
       
       - name: Build MSI
         working-directory: ./installer
         run: |
-          candle.exe -dSourceDir=. -o obj\ RemoteAgent.wxs
+          New-Item -ItemType Directory -Force -Path obj
+          candle.exe -dSourceDir=. -out obj\RemoteAgent.wixobj RemoteAgent.wxs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           light.exe -out RemoteAgent.msi obj\RemoteAgent.wixobj
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
