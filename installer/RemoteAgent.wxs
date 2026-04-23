@@ -31,35 +31,30 @@
 
     <Media Id="1" Cabinet="RemoteAgent.cab" EmbedCab="yes" />
 
+    <!-- Feature definition -->
     <Feature Id="ProductFeature" Title="Remote Agent" Level="1">
       <ComponentRef Id="MainExecutable" />
-      <ComponentRef Id="PostInstallExe" />
-      <ComponentRef Id="PreUninstallExe" />
       <ComponentRef Id="ConfigComponent" />
       <ComponentRef Id="LogsComponent" />
       <ComponentRef Id="ApplicationShortcuts" />
     </Feature>
 
+    <!-- Main application files -->
     <DirectoryRef Id="INSTALLFOLDER">
+      <!-- Single native Go executable - handles agent, service install, and service uninstall via flags -->
       <Component Id="MainExecutable" Guid="11111111-1111-1111-1111-111111111111">
         <File Id="RemoteAgentExe" Source="$(var.SourceDir)\bin\RemoteAgent.exe" KeyPath="yes" />
         <RegistryValue Root="HKLM" Key="Software\RemoteAgent" Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" KeyPath="no" />
       </Component>
 
-      <Component Id="PostInstallExe" Guid="66666666-6666-6666-6666-666666666666">
-        <File Id="PostInstallBin" Source="$(var.SourceDir)\bin\post-install.exe" KeyPath="yes" />
-      </Component>
-
-      <Component Id="PreUninstallExe" Guid="77777777-7777-7777-7777-777777777777">
-        <File Id="PreUninstallBin" Source="$(var.SourceDir)\bin\pre-uninstall.exe" KeyPath="yes" />
-      </Component>
-
+      <!-- Configuration directory (RemoteAgent.exe --install-service creates the config file here) -->
       <Directory Id="CONFIGFOLDER" Name="config">
         <Component Id="ConfigComponent" Guid="22222222-2222-2222-2222-222222222222" KeyPath="yes">
           <CreateFolder />
         </Component>
       </Directory>
 
+      <!-- Logs directory -->
       <Directory Id="LOGSFOLDER" Name="logs">
         <Component Id="LogsComponent" Guid="55555555-5555-5555-5555-555555555555" KeyPath="yes">
           <CreateFolder />
@@ -67,6 +62,7 @@
       </Directory>
     </DirectoryRef>
 
+    <!-- Start menu shortcuts -->
     <DirectoryRef Id="ApplicationProgramsFolder">
       <Component Id="ApplicationShortcuts" Guid="44444444-4444-4444-4444-444444444444">
         <Shortcut Id="UninstallShortcut" Name="Uninstall Remote Agent" Target="[System64Folder]msiexec.exe" 
@@ -76,27 +72,32 @@
       </Component>
     </DirectoryRef>
 
+    <!-- Custom Actions -->
+    <!-- Run RemoteAgent.exe --install-service after files are installed to write config and register service -->
     <CustomAction
-      Id="RunPostInstall"
-      FileKey="PostInstallBin"
-      ExeCommand=""
+      Id="RunInstallService"
+      FileKey="RemoteAgentExe"
+      ExeCommand="--install-service"
       Execute="deferred"
       Impersonate="no"
       Return="check" />
 
+    <!-- Run RemoteAgent.exe --uninstall-service before files are removed to stop and delete the service -->
     <CustomAction
-      Id="RunPreUninstall"
-      FileKey="PreUninstallBin"
-      ExeCommand=""
+      Id="RunUninstallService"
+      FileKey="RemoteAgentExe"
+      ExeCommand="--uninstall-service"
       Execute="deferred"
       Impersonate="no"
       Return="ignore" />
 
+    <!-- Scheduling: install runs after InstallFiles, uninstall before RemoveFiles -->
     <InstallExecuteSequence>
-      <Custom Action="RunPostInstall" After="InstallFiles">NOT Installed</Custom>
-      <Custom Action="RunPreUninstall" Before="RemoveFiles">Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+      <Custom Action="RunInstallService" After="InstallFiles">NOT Installed</Custom>
+      <Custom Action="RunUninstallService" Before="RemoveFiles">Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
     </InstallExecuteSequence>
 
+    <!-- User Interface -->
     <UIRef Id="WixUI_InstallDir" />
     <WixVariable Id="WixUIInstallDirectory" Value="INSTALLFOLDER" />
 
