@@ -35,25 +35,20 @@ jobs:
       
       - name: Compile TypeScript agent
         run: pnpm run build:agent
-      
-      - name: Install WiX Toolset
-        run: choco install wixtoolset -y
-      
-      - name: Prepare installer files
+
+      - name: Build agent executables with pkg
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path installer\bin | Out-Null
-          New-Item -ItemType Directory -Force -Path installer\bin\config | Out-Null
-          New-Item -ItemType Directory -Force -Path installer\bin\logs | Out-Null
-          # Copy compiled agent JS files from dist
-          if (Test-Path "dist\agent") {
-            Copy-Item dist\agent\* -Destination installer\bin\ -Recurse -Force
-          }
-          # Copy scripts
-          if (Test-Path "scripts") {
-            Copy-Item scripts\* -Destination installer\bin\ -Exclude *.ts -Force
-          }
-      
+          npm install -g pkg
+          pkg dist/agent/service-runner.js --target node20-win-x64 --output installer/bin/RemoteAgent.exe --config pkg.config.json
+          pkg dist/agent/post-install.js --target node20-win-x64 --output installer/bin/post-install.exe --config pkg.config.json
+          pkg dist/agent/pre-uninstall.js --target node20-win-x64 --output installer/bin/pre-uninstall.exe --config pkg.config.json
+          Get-ChildItem installer\bin\*.exe | ForEach-Object { Write-Host "Built: $($_.Name) ($([math]::Round($_.Length/1MB, 1)) MB)" }
+
+      - name: Install WiX Toolset
+        run: choco install wixtoolset -y
+
       - name: Build MSI
         shell: pwsh
         working-directory: ./installer
