@@ -54,7 +54,7 @@ jobs:
           $msi = (Join-Path (Get-Location) "RemoteAgent.msi")
           & candle.exe "-dSourceDir=." "-out" $wixobj $wxs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & light.exe $wixobj "-out" $msi
+          & light.exe $wixobj "-out" $msi "-ext" "WixUIExtension"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       
       - name: Upload MSI as artifact
