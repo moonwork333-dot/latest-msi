@@ -60,11 +60,11 @@
     </DirectoryRef>
 
     <DirectoryRef Id="ApplicationProgramsFolder">
-      <Component Id="ApplicationShortcuts" Guid="44444444-4444-4444-4444-444444444444" KeyPath="yes">
+      <Component Id="ApplicationShortcuts" Guid="44444444-4444-4444-4444-444444444444">
         <Shortcut Id="UninstallShortcut" Name="Uninstall Remote Agent" Target="[System64Folder]msiexec.exe" 
           Arguments="/x [ProductCode]" Description="Removes Remote Agent from your computer" />
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
-        <RegistryValue Root="HKCU" Key="Software\Remote Agent" Name="installed" Type="integer" Value="1" KeyPath="no" />
+        <RegistryValue Root="HKCU" Key="Software\Remote Agent" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </DirectoryRef>
 
