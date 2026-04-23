@@ -1,0 +1,11 @@
+{
+  "scripts": [
+    "dist/agent/**/*.js"
+  ],
+  "assets": [
+    "node_modules/screenshot-desktop/lib/win32/**/*"
+  ],
+  "targets": [
+    "node20-win-x64"
+  ]
+}
