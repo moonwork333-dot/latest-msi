@@ -40,10 +40,19 @@ jobs:
         run: choco install wixtoolset -y
       
       - name: Prepare installer files
+        shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path installer\bin
-          Copy-Item dist -Destination installer\ -Recurse -Force
-          Copy-Item agent\* installer\bin\ -Exclude *.ts -Force
+          New-Item -ItemType Directory -Force -Path installer\bin | Out-Null
+          New-Item -ItemType Directory -Force -Path installer\bin\config | Out-Null
+          New-Item -ItemType Directory -Force -Path installer\bin\logs | Out-Null
+          # Copy compiled agent JS files from dist
+          if (Test-Path "dist\agent") {
+            Copy-Item dist\agent\* -Destination installer\bin\ -Recurse -Force
+          }
+          # Copy scripts
+          if (Test-Path "scripts") {
+            Copy-Item scripts\* -Destination installer\bin\ -Exclude *.ts -Force
+          }
       
       - name: Build MSI
         shell: pwsh
