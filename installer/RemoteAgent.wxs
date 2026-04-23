@@ -47,7 +47,7 @@
         <RegistryValue Root="HKLM" Key="Software\RemoteAgent" Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" KeyPath="no" />
       </Component>
 
-      <!-- Configuration directory (RemoteAgent.exe --install-service creates the config file here) -->
+      <!-- Configuration directory (created by RemoteAgent.exe during install service) -->
       <Directory Id="CONFIGFOLDER" Name="config">
         <Component Id="ConfigComponent" Guid="22222222-2222-2222-2222-222222222222" KeyPath="yes">
           <CreateFolder />
@@ -73,7 +73,7 @@
     </DirectoryRef>
 
     <!-- Custom Actions -->
-    <!-- Run RemoteAgent.exe --install-service after files are installed to write config and register service -->
+    <!-- Run RemoteAgent.exe with install-service flag after files are installed -->
     <CustomAction
       Id="RunInstallService"
       FileKey="RemoteAgentExe"
@@ -82,7 +82,7 @@
       Impersonate="no"
       Return="check" />
 
-    <!-- Run RemoteAgent.exe --uninstall-service before files are removed to stop and delete the service -->
+    <!-- Run RemoteAgent.exe with uninstall-service flag before files are removed -->
     <CustomAction
       Id="RunUninstallService"
       FileKey="RemoteAgentExe"
