@@ -97,9 +97,11 @@
       <Custom Action="RunUninstallService" Before="RemoveFiles">Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
     </InstallExecuteSequence>
 
+    <!-- Required property for WixUI_InstallDir - must match the Directory Id -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
     <!-- User Interface -->
     <UIRef Id="WixUI_InstallDir" />
-    <WixVariable Id="WixUIInstallDirectory" Value="INSTALLFOLDER" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.SourceDir)\license.rtf" />
 
   </Product>
