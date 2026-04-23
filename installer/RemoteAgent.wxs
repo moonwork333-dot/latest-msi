@@ -100,6 +100,7 @@
     <!-- User Interface -->
     <UIRef Id="WixUI_InstallDir" />
     <WixVariable Id="WixUIInstallDirectory" Value="INSTALLFOLDER" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.SourceDir)\..\license.rtf" />
 
   </Product>
 </Wix>
