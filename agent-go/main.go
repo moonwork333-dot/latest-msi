@@ -13,11 +13,12 @@ import (
 )
 
 const (
-	defaultServerURL      = "wss://your-rmm-server.com/agent"
-	defaultReconnectDelay = 5 * time.Second
-	configFileName        = "agent-config.json"
+	defaultServerURL       = "wss://your-rmm-server.com/agent"
+	defaultReconnectDelay  = 5 * time.Second
+	configFileName         = "agent-config.json"
 )
 
+// Config holds the agent configuration loaded from disk
 type Config struct {
 	MachineID         string `json:"machineId"`
 	ServerURL         string `json:"serverUrl"`
@@ -28,6 +29,7 @@ type Config struct {
 }
 
 func loadConfig() (*Config, error) {
+	// Look for config relative to the executable
 	exePath, err := os.Executable()
 	if err != nil {
 		return nil, fmt.Errorf("could not determine executable path: %w", err)
@@ -45,6 +47,7 @@ func loadConfig() (*Config, error) {
 		return nil, fmt.Errorf("could not parse config file: %w", err)
 	}
 
+	// Apply defaults for missing values
 	if cfg.ServerURL == "" {
 		cfg.ServerURL = defaultServerURL
 	}
@@ -62,32 +65,36 @@ func setupLogger(logLevel string) *log.Logger {
 	exePath, _ := os.Executable()
 	exeDir := filepath.Dir(exePath)
 	logDir := filepath.Join(exeDir, "logs")
+
+	// Ensure logs directory exists
 	_ = os.MkdirAll(logDir, 0755)
 
 	logFile := filepath.Join(logDir, "agent.log")
 	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
+		// Fall back to stdout
 		return log.New(os.Stdout, "[RemoteAgent] ", log.LstdFlags)
 	}
+
 	return log.New(f, "[RemoteAgent] ", log.LstdFlags)
 }
 
 func main() {
-	install := flag.Bool("install", false, "Install as a Windows service")
-	uninstall := flag.Bool("uninstall", false, "Uninstall the Windows service")
+	installService := flag.Bool("install-service", false, "Install as a Windows service (writes config and registers)")
+	uninstallService := flag.Bool("uninstall-service", false, "Uninstall the Windows service")
 	flag.Parse()
 
-	if *install {
-		if err := installService(); err != nil {
+	if *installService {
+		if err := installAndConfigureService(); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to install service: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Println("Service installed successfully")
+		fmt.Println("Service installed and configured successfully")
 		return
 	}
 
-	if *uninstall {
-		if err := uninstallService(); err != nil {
+	if *uninstallService {
+		if err := uninstallWindowsService(); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to uninstall service: %v\n", err)
 			os.Exit(1)
 		}
@@ -95,6 +102,7 @@ func main() {
 		return
 	}
 
+	// Load configuration
 	cfg, err := loadConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Config error: %v\n", err)
@@ -105,8 +113,10 @@ func main() {
 	logger.Printf("Remote Agent starting - MachineID: %s", cfg.MachineID)
 	logger.Printf("Connecting to: %s", cfg.ServerURL)
 
+	// Create agent and start
 	agent := NewAgent(cfg, logger)
 
+	// Handle OS signals for graceful shutdown
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
@@ -116,6 +126,7 @@ func main() {
 		agent.Stop()
 	}()
 
+	// Run with auto-reconnect
 	for {
 		if agent.stopped {
 			break
