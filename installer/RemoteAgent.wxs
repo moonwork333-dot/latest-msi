@@ -33,17 +33,25 @@
 
     <Feature Id="ProductFeature" Title="Remote Agent" Level="1">
       <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="PostInstallExe" />
+      <ComponentRef Id="PreUninstallExe" />
       <ComponentRef Id="ConfigComponent" />
       <ComponentRef Id="LogsComponent" />
       <ComponentRef Id="ApplicationShortcuts" />
     </Feature>
 
     <DirectoryRef Id="INSTALLFOLDER">
-      <Component Id="MainExecutable" Guid="11111111-1111-1111-1111-111111111111" KeyPath="yes">
-        <File Id="ServiceRunner" Source="$(var.SourceDir)\bin\service-runner.js" KeyPath="no" />
-        <File Id="WindowsService" Source="$(var.SourceDir)\bin\windows-service.js" KeyPath="no" />
-        <File Id="RemoteAgent" Source="$(var.SourceDir)\bin\remote-agent.js" KeyPath="no" />
+      <Component Id="MainExecutable" Guid="11111111-1111-1111-1111-111111111111">
+        <File Id="RemoteAgentExe" Source="$(var.SourceDir)\bin\RemoteAgent.exe" KeyPath="yes" />
         <RegistryValue Root="HKLM" Key="Software\RemoteAgent" Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" KeyPath="no" />
+      </Component>
+
+      <Component Id="PostInstallExe" Guid="66666666-6666-6666-6666-666666666666">
+        <File Id="PostInstallBin" Source="$(var.SourceDir)\bin\post-install.exe" KeyPath="yes" />
+      </Component>
+
+      <Component Id="PreUninstallExe" Guid="77777777-7777-7777-7777-777777777777">
+        <File Id="PreUninstallBin" Source="$(var.SourceDir)\bin\pre-uninstall.exe" KeyPath="yes" />
       </Component>
 
       <Directory Id="CONFIGFOLDER" Name="config">
@@ -67,6 +75,27 @@
         <RegistryValue Root="HKCU" Key="Software\Remote Agent" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </DirectoryRef>
+
+    <CustomAction
+      Id="RunPostInstall"
+      FileKey="PostInstallBin"
+      ExeCommand=""
+      Execute="deferred"
+      Impersonate="no"
+      Return="check" />
+
+    <CustomAction
+      Id="RunPreUninstall"
+      FileKey="PreUninstallBin"
+      ExeCommand=""
+      Execute="deferred"
+      Impersonate="no"
+      Return="ignore" />
+
+    <InstallExecuteSequence>
+      <Custom Action="RunPostInstall" After="InstallFiles">NOT Installed</Custom>
+      <Custom Action="RunPreUninstall" Before="RemoveFiles">Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+    </InstallExecuteSequence>
 
     <UIRef Id="WixUI_InstallDir" />
     <WixVariable Id="WixUIInstallDirectory" Value="INSTALLFOLDER" />
