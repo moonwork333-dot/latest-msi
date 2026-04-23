@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	defaultServerURL       = "wss://your-rmm-server.com/agent"
-	defaultReconnectDelay  = 5 * time.Second
-	configFileName         = "agent-config.json"
+	defaultServerURL      = "wss://your-rmm-server.com/agent"
+	defaultReconnectDelay = 5 * time.Second
+	configFileName        = "agent-config.json"
 )
 
 // Config holds the agent configuration loaded from disk
